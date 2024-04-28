@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GPS Coordinate</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  .big {
+    font-size: larger;
+    font-weight: bold;
+  }
+  .small {
+    font-size: smaller;
+  }
+  table {
+    margin-bottom: 10px;
+  }
+  table td:first-child {
+    font-weight: bold;
+    padding-right: 10px;
+  }
+</style>
+</head>
+<body>
+<h2>GPS Location</h2>
+<p id="tugaskuliah" class="big">Tugas Kuliah</p>
+<table>
+    <tr>
+        <td>Nama MK</td>
+        <td>  Kartografi dan Geospasial</td>
+    </tr>
+    <tr>
+        <td>Prodi</td>
+        <td>  Sistem Informasi Kota Cerdas</td>
+    </tr>
+    <tr>
+        <td>Kampus</td>
+        <td>  Politeknik Negeri Banjarmasin</td>
+    </tr>
+    <tr>
+        <td>Dosen Pengampu</td>
+        <td>  Agus SBN</td>
+    </tr>
+    <tr>
+        <td>Nama Anda</td>
+        <td>  Qurani Shifa</td>
+    </tr>
+    <tr>
+        <td>Nim</td>
+        <td>  C050422018</td>
+    </tr>
+    <tr>
+        <td>Kelas</td>
+        <td>  SIKC 4A</td>
+    </tr>
+    <tr>
+        <td>Tanggal</td>
+        <td id="tanggal">  </td>
+    </tr>
+</table>
+
+<table>
+    <tr>
+        <td>Latitude</td>
+        <td id="latitude"></td>
+    </tr>
+    <tr>
+        <td>Longitude</td>
+        <td id="longitude"></td>
+    </tr>
+    <tr>
+        <td>Address</td>
+        <td id="address"></td>
+    </tr>
+</table>
+
+<button id="getLocationBtn">Get Coordinates</button>
+
+<div id="map" style="width: 100%; height: 400px;"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+    // Panggil fungsi showPosition saat halaman dimuat
+    window.addEventListener("load", showPositionOnLoad);
+
+    function showPositionOnLoad() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            alert("Geolocation is not supported by this browser.");
+        }
+    }
+
+    document.getElementById("tanggal").innerText = getCurrentDate();
+
+    function getCurrentDate() {
+        var currentDate = new Date();
+        var day = currentDate.getDate();
+        var monthIndex = currentDate.getMonth();
+        var year = currentDate.getFullYear();
+
+        var monthNames = [
+            "Januari", "Februari", "Maret",
+            "April", "Mei", "Juni", "Juli",
+            "Agustus", "September", "Oktober",
+            "November", "Desember"
+        ];
+
+        return day + ' ' + monthNames[monthIndex] + ' ' + year;
+    }
+
+    function showPosition(position) {
+        var latitude = position.coords.latitude;
+        var longitude = position.coords.longitude;
+
+        document.getElementById("latitude").innerText = latitude;
+        document.getElementById("longitude").innerText = longitude;
+
+        // Get address using reverse geocoding
+        var apiUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`;
+        fetch(apiUrl)
+            .then(response => response.json())
+            .then(data => {
+                var address = data.display_name;
+                document.getElementById("address").innerText = address;
+            })
+            .catch(error => console.log('Error:', error));
+
+
+        // Initialize Leaflet map
+        var map = L.map('map').setView([latitude, longitude], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors',
+            maxZoom: 18
+        }).addTo(map);
+        L.marker([latitude, longitude]).addTo(map)
+            .bindPopup('You are here.')
+            .openPopup();
+    }
+
+    function showError(error) {
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                alert("User denied the request for Geolocation.");
+                break;
+            case error.POSITION_UNAVAILABLE:
+                alert("Location information is unavailable.");
+                break;
+            case error.TIMEOUT:
+                alert("The request to get user location timed out.");
+                break;
+            case error.UNKNOWN_ERROR:
+                alert("An unknown error occurred.");
+                break;
+        }
+    }
+</script>
+</body>
+</html>
